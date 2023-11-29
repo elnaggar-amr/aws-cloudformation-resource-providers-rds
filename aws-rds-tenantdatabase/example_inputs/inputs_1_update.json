@@ -1,0 +1,6 @@
+{
+    "DBInstanceIdentifier": "test-multitenant-instance",
+    "TenantDBName": "tdb1",
+    "NewTenantDBName": "tdb2",
+    "MasterUserPassword": "newPassword"
+}

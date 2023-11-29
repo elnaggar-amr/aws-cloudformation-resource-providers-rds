@@ -1,0 +1,160 @@
+{
+    "typeName": "AWS::RDS::TenantDatabase",
+    "description": "The AWS::RDS::TenantDatabase resource creates a Tenant Database in an Amazon RDS DB instance running on Multi-tenant configuration",
+    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
+    "definitions": {
+        "Tag": {
+            "description": "A key-value pair to associate with a resource.",
+            "type": "object",
+            "properties": {
+                "Key": {
+                    "type": "string",
+                    "description": "The key name of the tag. You can specify a value that is 1 to 128 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "Value": {
+                    "type": "string",
+                    "description": "The value for the tag. You can specify a value that is 0 to 256 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.",
+                    "minLength": 0,
+                    "maxLength": 256
+                }
+            },
+            "required": [
+                "Key"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "properties": {
+        "CharacterSetName": {
+            "type": "string",
+            "description": "Indicates that the tenant DB should be associated with the specified character set."
+        },
+        "DBInstanceIdentifier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "description": "The parent DB instance of the tenant DB."
+        },
+        "DbiResourceId": {
+            "type": "string",
+            "description": "The AWS Region-unique, immutable identifier for the parent DB instance of the tenant DB. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB instance is accessed."
+        },
+        "DeletionProtection": {
+            "type": "boolean",
+            "description": "A value that indicates whether the tenant DB has deletion protection enabled. The tenant database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled."
+        },
+        "MasterUsername": {
+            "type": "string",
+            "description": "The master user name for the tenant DB.",
+            "minLength": 1,
+            "maxLength": 128
+        },
+        "MasterUserPassword": {
+            "type": "string",
+            "description": "The password for the master user."
+        },
+        "NcharCharacterSetName": {
+            "type": "string",
+            "description": "The name of the NCHAR character set for the tenant DB."
+        },
+        "Tags": {
+            "type": "array",
+            "insertionOrder": false,
+            "uniqueItems": false,
+            "items": {
+                "$ref": "#/definitions/Tag"
+            },
+            "description": "Tags to assign to the tenant DB."
+        },
+        "TenantDatabaseArn": {
+            "type": "string",
+            "description": "The Amazon Resource Name (ARN) for the tenant DB."
+        },
+        "TenantDatabaseResourceId": {
+            "type": "string",
+            "description": "The AWS Region-unique, immutable identifier for the tenant DB. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the tenant DB is accessed."
+        },
+        "TenantDatabaseCreateTime": {
+            "type": "string",
+            "description": "The time the tenant database was created."
+        },
+        "TenantDBName" : {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8,
+            "description": "A name for the tenant DB. If you specify a name, AWS CloudFormation converts it to lowercase. If you don't specify a name, AWS CloudFormation generates a unique physical ID and uses that ID for the tenant DB."
+        },
+        "NewTenantDBName" : {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8,
+            "description": "The new name of the tenant database when renaming a tenant database. This parameter isn't case-sensitive."
+        }
+    },
+    "additionalProperties": false,
+    "propertyTransform": {
+        "/properties/DBInstanceIdentifier": "$lowercase(DBInstanceIdentifier)",
+        "/properties/TenantDBName": "$lowercase(TenantDBName) $OR $uppercase(TenantDBName)"
+    },
+    "createOnlyProperties": [
+        "/properties/CharacterSetName",
+        "/properties/MasterUsername",
+        "/properties/NcharCharacterSetName",
+        "/properties/DBInstanceIdentifier"
+    ],
+    "writeOnlyProperties": [
+        "/properties/MasterUserPassword",
+        "/properties/NewTenantDBName"
+    ],
+    "readOnlyProperties": [
+        "/properties/DeletionProtection",
+        "/properties/DbiResourceId",
+        "/properties/TenantDatabaseArn",
+        "/properties/TenantDatabaseCreateTime",
+        "/properties/TenantDatabaseResourceId"
+    ],
+    "primaryIdentifier": [
+        "/properties/TenantDatabaseResourceId"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "rds:AddTagsToResource",
+                "rds:CreateTenantDatabase",
+                "rds:DescribeDbInstances",
+                "rds:DescribeTenantDatabases"
+            ],
+            "timeoutInMinutes": 600
+        },
+        "read": {
+            "permissions": [
+                "rds:DescribeDbInstances",
+                "rds:DescribeTenantDatabases"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "rds:ModifyTenantDatabase",
+                "rds:DescribeDbInstances",
+                "rds:DescribeTenantDatabases"
+            ],
+            "timeoutInMinutes": 600
+        },
+        "delete": {
+            "permissions": [
+                "rds:DeleteTenantDatabase",
+                "rds:DescribeDbInstances",
+                "rds:DescribeTenantDatabases"
+            ],
+            "timeoutInMinutes": 600
+        },
+        "list": {
+            "permissions": [
+                "rds:DescribeDbInstances",
+                "rds:DescribeTenantDatabases"
+            ]
+        }
+    }
+}

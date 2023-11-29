@@ -1,0 +1,11 @@
+{
+    "DBInstanceIdentifier": "test-multitenant-instance",
+    "MasterUsername": "masteruser",
+    "MasterUserPassword": "password",
+    "Tags": [
+        {
+            "Key": "created-with",
+            "Value": "CloudFormation"
+        }
+    ]
+}
