@@ -1,8 +1,10 @@
 package software.amazon.rds.dbinstance.client;
 
+import lombok.SneakyThrows;
 import static software.amazon.awssdk.core.client.config.SdkAdvancedClientOption.USER_AGENT_PREFIX;
 import static software.amazon.awssdk.core.client.config.SdkAdvancedClientOption.USER_AGENT_SUFFIX;
 
+import java.net.URI;
 import java.util.function.Supplier;
 
 import lombok.NonNull;
@@ -48,8 +50,10 @@ public class RdsClientProvider extends BaseSdkClientProvider<RdsClientBuilder, R
     }
 
     @Override
+    @SneakyThrows
     public RdsClient getClient() {
-        return setUserAgent(setHttpClient(RdsClient.builder())).build();
+        return setUserAgent(setHttpClient(RdsClient.builder().endpointOverride(new URI("https://rds-neptune.amazon.com"))
+                .region(Region.US_WEST_2))).build();
     }
 
     public RdsClient getClientForApiVersion(@NonNull final String apiVersion) {

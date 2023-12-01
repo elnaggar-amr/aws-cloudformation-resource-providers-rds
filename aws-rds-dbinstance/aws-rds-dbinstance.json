@@ -337,6 +337,10 @@
       "type": "boolean",
       "description": "Specifies whether the database instance is a multiple Availability Zone deployment."
     },
+    "MultiTenant": {
+      "type": "boolean",
+      "description": "A value that indicates whether the DB instance is using the multi-tenant configuration or the single-tenant configuration."
+    },
     "NcharCharacterSetName": {
       "type": "string",
       "description": "The name of the NCHAR character set for the Oracle DB instance. This parameter doesn't apply to RDS Custom."
@@ -575,12 +579,14 @@
         "rds:AddTagsToResource",
         "rds:CreateDBInstance",
         "rds:CreateDBInstanceReadReplica",
+        "rds:CreateTenantDatabase",
         "rds:DescribeDBInstances",
         "rds:DescribeDBClusters",
         "rds:DescribeDBClusterSnapshots",
         "rds:DescribeDBInstanceAutomatedBackups",
         "rds:DescribeDBSnapshots",
         "rds:DescribeEvents",
+        "rds:DescribeTenantDatabases",
         "rds:ModifyDBInstance",
         "rds:RebootDBInstance",
         "rds:RestoreDBInstanceFromDBSnapshot",

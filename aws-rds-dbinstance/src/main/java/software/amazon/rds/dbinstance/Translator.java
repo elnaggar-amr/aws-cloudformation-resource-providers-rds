@@ -262,6 +262,7 @@ public class Translator {
                 .port(translatePortToSdk(model.getPort()))
                 .preferredBackupWindow(model.getPreferredBackupWindow())
                 .preferredMaintenanceWindow(model.getPreferredMaintenanceWindow())
+                .multiTenant(model.getMultiTenant())
                 .build();
     }
 
@@ -324,7 +325,8 @@ public class Translator {
                 .tdeCredentialArn(model.getTdeCredentialArn())
                 .tdeCredentialPassword(model.getTdeCredentialPassword())
                 .timezone(model.getTimezone())
-                .vpcSecurityGroupIds(CollectionUtils.isNotEmpty(model.getVPCSecurityGroups()) ? model.getVPCSecurityGroups() : null);
+                .vpcSecurityGroupIds(CollectionUtils.isNotEmpty(model.getVPCSecurityGroups()) ? model.getVPCSecurityGroups() : null)
+                .multiTenant(model.getMultiTenant());
 
         // Set PerformanceInsightsKMSKeyId only if EnablePerformanceInsights is true.
         // The point is that it is a completely legitimate create from the CFN perspective and
@@ -870,7 +872,8 @@ public class Translator {
                 .tags(tags)
                 .tdeCredentialArn(dbInstance.tdeCredentialArn())
                 .timezone(dbInstance.timezone())
-                .vPCSecurityGroups(translateVpcSecurityGroupsFromSdk(dbInstance.vpcSecurityGroups()));
+                .vPCSecurityGroups(translateVpcSecurityGroupsFromSdk(dbInstance.vpcSecurityGroups()))
+                .multiTenant(dbInstance.multiTenant());
     }
 
     private static Endpoint translateEndpointFromSdk(software.amazon.awssdk.services.rds.model.Endpoint endpoint) {
