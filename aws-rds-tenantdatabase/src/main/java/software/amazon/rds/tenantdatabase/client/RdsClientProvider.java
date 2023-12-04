@@ -14,7 +14,6 @@ public class RdsClientProvider extends BaseSdkClientProvider<RdsClientBuilder, R
     @Override
     @SneakyThrows
     public RdsClient getClient() {
-        return setUserAgent(setHttpClient(RdsClient.builder().endpointOverride(new URI("https://rds-neptune.amazon.com"))
-                .region(Region.US_WEST_2))).build();
+        return setUserAgent(setHttpClient(RdsClient.builder())).build();
     }
 }

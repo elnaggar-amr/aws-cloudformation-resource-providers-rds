@@ -1,0 +1,16 @@
+{
+    "CreateInputs": {
+        "DBInstanceIdentifier": "{{ awsrdstenantdatabasecto1 }}",
+        "TenantDBName": "tdb1",
+        "MasterUsername": "masteruser",
+        "MasterUserPassword": "password",
+        "CharacterSetName" : "AL32UTF8",
+        "NcharCharacterSetName" : "AL16UTF16",
+        "Tags": [
+            {
+                "Key": "created-with",
+                "Value": "CloudFormation"
+            }
+        ]
+    }
+}

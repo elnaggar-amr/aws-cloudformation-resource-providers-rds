@@ -1,0 +1,6 @@
+{
+    "DeleteInputs": {
+        "DBInstanceIdentifier": "{{ awsrdstenantdatabasecto1 }}",
+        "TenantDBName": "tdb2"
+    }
+}

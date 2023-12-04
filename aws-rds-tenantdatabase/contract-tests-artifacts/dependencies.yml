@@ -1,0 +1,18 @@
+Resources:
+  MyDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: 'test-multitenant-instance'
+      AllocatedStorage: '50'
+      DBInstanceClass: 'db.r5.xlarge'
+      Engine: 'oracle-ee-cdb'
+      LicenseModel: 'bring-your-own-license'
+      MasterUsername: 'master'
+      MasterUserPassword: 'password'
+      MultiTenant: 'true'
+      BackupRetentionPeriod: '0'
+Outputs:
+  MyDBRef:
+    Value: 'test-multitenant-instance'
+    Export:
+      Name: !Sub awsrdstenantdatabasecto1-${AWS::StackName}

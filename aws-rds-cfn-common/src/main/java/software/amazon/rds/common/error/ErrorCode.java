@@ -38,6 +38,8 @@ public enum ErrorCode {
     StorageQuotaExceeded("StorageQuotaExceeded"),
     StorageTypeNotAvailableFault("StorageTypeNotAvailableFault"),
     StorageTypeNotSupportedFault("StorageTypeNotSupportedFault"),
+    TenantDatabaseNotFoundFault("TenantDatabaseNotFoundFault"),
+    TenantDatabaseQuotaExceededFault("TenantDatabaseQuotaExceededFault"),
     Throttling("Throttling"),
     ThrottlingException("ThrottlingException"),
     UnauthorizedOperation("UnauthorizedOperation");
