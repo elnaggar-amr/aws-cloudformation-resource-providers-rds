@@ -109,7 +109,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
      */
     protected static TenantDatabase getTenantDatabase(final ResourceModel resource, final ProxyClient<RdsClient> proxyClient ) {
        final DescribeTenantDatabasesResponse response =
-               proxyClient.client().describeTenantDatabases(Translator.translateToDescribeTenantDatabasesRequest(resource));
+               proxyClient.injectCredentialsAndInvokeV2(Translator.translateToDescribeTenantDatabasesRequest(resource),
+                       proxyClient.client()::describeTenantDatabases);
 
        if (CollectionUtils.isEmpty(response.tenantDatabases())) {
            return null;
@@ -128,11 +129,11 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     protected static TenantDatabase getRenamedTenantDatabase(final ResourceModel resource,
                                                              final ProxyClient<RdsClient> proxyClient) {
         final DescribeTenantDatabasesResponse response =
-                proxyClient.client().describeTenantDatabases(Translator.translateToDescribeTenantDatabasesRequest(
+                proxyClient.injectCredentialsAndInvokeV2(Translator.translateToDescribeTenantDatabasesRequest(
                         ResourceModel.builder()
                                 .tenantDBName(StringUtils.isEmpty(resource.getNewTenantDBName()) ? resource.getTenantDBName() : resource.getNewTenantDBName())
                                 .dBInstanceIdentifier(resource.getDBInstanceIdentifier())
-                                .build()));
+                                .build()), proxyClient.client()::describeTenantDatabases);
 
         if (CollectionUtils.isEmpty(response.tenantDatabases())) {
             return null;
