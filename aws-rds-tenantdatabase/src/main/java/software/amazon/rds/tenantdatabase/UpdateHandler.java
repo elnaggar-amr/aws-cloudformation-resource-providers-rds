@@ -25,6 +25,11 @@ public class UpdateHandler extends BaseHandlerStd {
                 proxy.initiate("rds::modify-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToModifyTenantDatabaseRequest)
                     .makeServiceCall((awsRequest, proxyInvocation) -> {
+
+                        updateResourceModelForServiceCall(progress.getResourceModel(), proxyClient);
+                        awsRequest = awsRequest.toBuilder().tenantDBName(progress.getResourceModel().getTenantDBName())
+                                .dbInstanceIdentifier(progress.getResourceModel().getDBInstanceIdentifier()).build();
+
                         ModifyTenantDatabaseResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
                                 awsRequest, proxyInvocation.client()::modifyTenantDatabase);
                         updateResourceModel(response.tenantDatabase(), progress.getResourceModel());

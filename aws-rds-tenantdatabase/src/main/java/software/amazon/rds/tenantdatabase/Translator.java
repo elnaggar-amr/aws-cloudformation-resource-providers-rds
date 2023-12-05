@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.rds.model.CreateTenantDatabaseRequest;
 import software.amazon.awssdk.services.rds.model.DeleteTenantDatabaseRequest;
 import software.amazon.awssdk.services.rds.model.DescribeTenantDatabasesRequest;
 import software.amazon.awssdk.services.rds.model.DescribeTenantDatabasesResponse;
+import software.amazon.awssdk.services.rds.model.Filter;
 import software.amazon.awssdk.services.rds.model.ModifyTenantDatabaseRequest;
 import software.amazon.awssdk.services.rds.model.TenantDatabase;
 
@@ -42,6 +43,12 @@ public class Translator {
     return DescribeTenantDatabasesRequest.builder()
             .dbInstanceIdentifier(model.getDBInstanceIdentifier())
             .tenantDBName(model.getTenantDBName())
+            .build();
+  }
+
+  static DescribeTenantDatabasesRequest translateToDescribeTenantDatabasesRequestWithTenantDBResourceId(final ResourceModel model) {
+    return DescribeTenantDatabasesRequest.builder()
+            .filters(Filter.builder().name("tenant-database-resource-id").values(model.getTenantDatabaseResourceId()).build())
             .build();
   }
 

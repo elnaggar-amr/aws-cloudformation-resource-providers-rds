@@ -53,6 +53,10 @@ public class DeleteHandler extends BaseHandlerStd {
                             awsRequest = awsRequest.toBuilder().skipFinalSnapshot(true).build();
                         }
 
+                        updateResourceModelForServiceCall(progress.getResourceModel(), proxyClient);
+                        awsRequest = awsRequest.toBuilder().tenantDBName(progress.getResourceModel().getTenantDBName())
+                                .dbInstanceIdentifier(progress.getResourceModel().getDBInstanceIdentifier()).build();
+
                         final DeleteTenantDatabaseResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
                                 awsRequest, proxyInvocation.client()::deleteTenantDatabase);
                         updateResourceModel(response.tenantDatabase(), progress.getResourceModel());

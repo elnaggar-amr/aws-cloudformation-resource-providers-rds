@@ -34,8 +34,6 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     protected RequestLogger logger;
     protected final FilteredJsonPrinter PARAMETERS_FILTER = new FilteredJsonPrinter("MasterUsername", "MasterUserPassword");
 
-
-
     @Override
     public final ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -107,7 +105,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
      * @param proxyClient
      * @return tenantDatabase
      */
-    protected static TenantDatabase getTenantDatabase(final ResourceModel resource, final ProxyClient<RdsClient> proxyClient ) {
+    protected static TenantDatabase getTenantDatabase(final ResourceModel resource, final ProxyClient<RdsClient> proxyClient) {
        final DescribeTenantDatabasesResponse response =
                proxyClient.injectCredentialsAndInvokeV2(Translator.translateToDescribeTenantDatabasesRequest(resource),
                        proxyClient.client()::describeTenantDatabases);
@@ -117,6 +115,18 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
        }
 
        return response.tenantDatabases().get(0);
+    }
+
+    protected static TenantDatabase getTenantDatabaseWithTdbResourceId(final ResourceModel resource, final ProxyClient<RdsClient> proxyClient) {
+        final DescribeTenantDatabasesResponse response =
+                proxyClient.injectCredentialsAndInvokeV2(Translator.translateToDescribeTenantDatabasesRequestWithTenantDBResourceId(resource),
+                        proxyClient.client()::describeTenantDatabases);
+
+        if (CollectionUtils.isEmpty(response.tenantDatabases())) {
+            return null;
+        }
+
+        return response.tenantDatabases().get(0);
     }
 
     /**
@@ -144,5 +154,15 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
     protected static void updateResourceModel(final TenantDatabase tenantDatabase, final ResourceModel resourceModel) {
         resourceModel.setTenantDatabaseResourceId(tenantDatabase.tenantDatabaseResourceId());
+    }
+
+    protected static void updateResourceModelForServiceCall(final ResourceModel model, final ProxyClient<RdsClient> proxyClient) {
+        if (StringUtils.isEmpty(model.getTenantDBName()) || StringUtils.isEmpty(model.getDBInstanceIdentifier())) {
+            TenantDatabase tdb = getTenantDatabaseWithTdbResourceId(model, proxyClient);
+            if (tdb != null) {
+                model.setTenantDBName(tdb.tenantDBName());
+                model.setDBInstanceIdentifier(tdb.dbInstanceIdentifier());
+            }
+        }
     }
 }
