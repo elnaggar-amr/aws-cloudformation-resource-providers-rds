@@ -69,29 +69,21 @@ public class CreateHandlerHandlerTest extends AbstractHandlerTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        final CreateTenantDatabaseResponse createTenantDatabaseResponse = CreateTenantDatabaseResponse.builder()
-                .tenantDatabase(TENANT_DATABASE)
-                .build();
-
-        expectCreateTenantDatabaseCall().setup().thenReturn(createTenantDatabaseResponse);
-
         doReturn(DescribeTenantDatabasesResponse.builder().tenantDatabases(TENANT_DATABASE).build())
                 .when(rdsClient).describeTenantDatabases(any(DescribeTenantDatabasesRequest.class));
 
         final CallbackContext context = new CallbackContext();
         context.setCreated(true);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response =
-                test_handleRequest_base(
-                        context,
-                        () -> TENANT_DATABASE,
-                        () -> CREATE_RESOURCE_MODEL,
-                        expectSuccess()
-                );
+        test_handleRequest_base(
+                context,
+                () -> TENANT_DATABASE,
+                () -> CREATE_RESOURCE_MODEL,
+                expectSuccess()
+        );
 
 
-        verify(proxyClient.client(), times(2)).describeTenantDatabases(any(DescribeTenantDatabasesRequest.class));
-        verify(proxyClient.client(), times(1)).createTenantDatabase(any(CreateTenantDatabaseRequest.class));
+        verify(proxyClient.client(), times(1)).describeTenantDatabases(any(DescribeTenantDatabasesRequest.class));
     }
 
     @ParameterizedTest
