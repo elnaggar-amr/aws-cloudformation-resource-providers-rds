@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.rds.model.TenantDatabaseQuotaExceededExce
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -24,6 +25,8 @@ import software.amazon.rds.common.handler.Commons;
 import software.amazon.rds.common.logging.RequestLogger;
 import software.amazon.rds.common.printer.FilteredJsonPrinter;
 import software.amazon.rds.tenantdatabase.client.RdsClientProvider;
+
+import java.util.function.Function;
 
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
@@ -61,6 +64,14 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             final ProxyClient<RdsClient> proxyClient,
             final RequestLogger logger);
 
+    protected static final Function<Exception, ErrorStatus> ignoreTenantDatabaseBeingDeletedConditionalErrorStatus = exception -> {
+        if (!software.amazon.awssdk.utils.StringUtils.isEmpty(exception.getMessage())
+                && exception.getMessage().contains("is already being deleted"))  {
+            return ErrorStatus.ignore(OperationStatus.IN_PROGRESS);
+        }
+        return ErrorStatus.failWith(HandlerErrorCode.ResourceConflict);
+    };
+
     protected static final ErrorRuleSet.Builder DEFAULT_TENANT_DATABASE_ERROR_RULE_SET_BUILDER = ErrorRuleSet
             .extend(Commons.DEFAULT_ERROR_RULE_SET)
             .withErrorCodes(ErrorStatus.failWith(HandlerErrorCode.InvalidRequest),
@@ -93,7 +104,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             .build();
 
     protected static final ErrorRuleSet DELETE_TENANT_DATABASE_ERR0R_RULE_SET = DEFAULT_TENANT_DATABASE_ERROR_RULE_SET_BUILDER
-            .withErrorClasses(ErrorStatus.failWith(HandlerErrorCode.ResourceConflict),
+            .withErrorClasses(ErrorStatus.conditional(ignoreTenantDatabaseBeingDeletedConditionalErrorStatus),
                     InvalidDbInstanceStateException.class)
             .build();
 
