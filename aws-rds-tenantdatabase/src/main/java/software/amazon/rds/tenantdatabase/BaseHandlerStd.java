@@ -141,4 +141,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
         return response.tenantDatabases().get(0);
     }
+
+    protected static void updateResourceModel(final TenantDatabase tenantDatabase, final ResourceModel resourceModel) {
+        resourceModel.setTenantDatabaseResourceId(tenantDatabase.tenantDatabaseResourceId());
+    }
 }

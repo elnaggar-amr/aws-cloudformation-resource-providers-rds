@@ -3,6 +3,7 @@ package software.amazon.rds.tenantdatabase;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.rds.RdsClient;
+import software.amazon.awssdk.services.rds.model.DeleteTenantDatabaseResponse;
 import software.amazon.awssdk.services.rds.model.TenantDatabase;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -51,7 +52,10 @@ public class DeleteHandler extends BaseHandlerStd {
                         } else {
                             awsRequest = awsRequest.toBuilder().skipFinalSnapshot(true).build();
                         }
-                        return client.client().deleteTenantDatabase(awsRequest);
+
+                        final DeleteTenantDatabaseResponse response = client.client().deleteTenantDatabase(awsRequest);
+                        updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
+                        return response;
                     })
                     .stabilize((awsRequest, awsResponse, client, model, context) -> {
                         final TenantDatabase tenantDatabase = BaseHandlerStd.getTenantDatabase(model, proxyClient);

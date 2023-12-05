@@ -1,6 +1,7 @@
 package software.amazon.rds.tenantdatabase;
 
 import software.amazon.awssdk.services.rds.RdsClient;
+import software.amazon.awssdk.services.rds.model.ModifyTenantDatabaseResponse;
 import software.amazon.awssdk.services.rds.model.TenantDatabase;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -23,7 +24,11 @@ public class UpdateHandler extends BaseHandlerStd {
             .then(progress ->
                 proxy.initiate("rds::modify-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToModifyTenantDatabaseRequest)
-                    .makeServiceCall((awsRequest, client) -> client.client().modifyTenantDatabase(awsRequest))
+                    .makeServiceCall((awsRequest, client) -> {
+                        ModifyTenantDatabaseResponse response = client.client().modifyTenantDatabase(awsRequest);
+                        updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
+                        return response;
+                    })
                     .stabilize((awsRequest, awsResponse, client, model, context) -> {
                         final TenantDatabase tenantDatabase = BaseHandlerStd.getRenamedTenantDatabase(model, proxyClient);
                         return tenantDatabase != null && tenantDatabase.status().equalsIgnoreCase("available") ;

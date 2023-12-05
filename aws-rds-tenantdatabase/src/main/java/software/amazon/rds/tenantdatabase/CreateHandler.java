@@ -1,6 +1,7 @@
 package software.amazon.rds.tenantdatabase;
 
 import software.amazon.awssdk.services.rds.RdsClient;
+import software.amazon.awssdk.services.rds.model.CreateTenantDatabaseResponse;
 import software.amazon.awssdk.services.rds.model.TenantDatabase;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -24,10 +25,14 @@ public class CreateHandler extends BaseHandlerStd {
                 .then(progress -> Commons.execOnce(progress,
                         () -> proxy.initiate("rds::create-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                         .translateToServiceRequest(Translator::translateToCreateTenantDatabaseRequest)
-                        .makeServiceCall((createRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(
-                                createRequest,
-                                proxyInvocation.client()::createTenantDatabase
-                        ))
+                        .makeServiceCall((createRequest, proxyInvocation) -> {
+                            CreateTenantDatabaseResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
+                                    createRequest,
+                                    proxyInvocation.client()::createTenantDatabase
+                            );
+                            updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
+                            return response;
+                        })
                         .stabilize((awsRequest, awsResponse, client, model, context) -> {
                             final TenantDatabase tenantDatabase = BaseHandlerStd.getTenantDatabase(model, proxyClient);
                             return tenantDatabase != null && tenantDatabase.status().equalsIgnoreCase("available");
