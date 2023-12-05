@@ -46,14 +46,15 @@ public class DeleteHandler extends BaseHandlerStd {
             .then(progress ->
                 proxy.initiate("rds::delete-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToDeleteTenantDatabaseRequest)
-                    .makeServiceCall((awsRequest, client) -> {
+                    .makeServiceCall((awsRequest, proxyInvocation) -> {
                         if (finalSnapshotId != null) {
                             awsRequest = awsRequest.toBuilder().finalDBSnapshotIdentifier(finalSnapshotId).skipFinalSnapshot(false).build();
                         } else {
                             awsRequest = awsRequest.toBuilder().skipFinalSnapshot(true).build();
                         }
 
-                        final DeleteTenantDatabaseResponse response = client.client().deleteTenantDatabase(awsRequest);
+                        final DeleteTenantDatabaseResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
+                                awsRequest, proxyInvocation.client()::deleteTenantDatabase);
                         updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
                         return response;
                     })
