@@ -42,11 +42,10 @@ public class DeleteHandler extends BaseHandlerStd {
             finalSnapshotId = null;
         }
 
-        logger.log("TestingAelnagg: We are calling Delete with: " + request.getDesiredResourceState());
-
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress ->
-                proxy.initiate("rds::delete-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+                    Commons.execOnce( progress,
+                            () -> proxy.initiate("rds::delete-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToDeleteTenantDatabaseRequest)
                     .makeServiceCall((awsRequest, proxyInvocation) -> {
                         if (finalSnapshotId != null) {
@@ -62,8 +61,6 @@ public class DeleteHandler extends BaseHandlerStd {
                         final DeleteTenantDatabaseResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
                                 awsRequest, proxyInvocation.client()::deleteTenantDatabase);
                         updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
-
-                        logger.log("TestingAelnagg: Deleting-tenant-database");
                         return response;
                     })
                     .stabilize((awsRequest, awsResponse, client, model, context) -> {
@@ -75,7 +72,8 @@ public class DeleteHandler extends BaseHandlerStd {
                             exception,
                             DELETE_TENANT_DATABASE_ERR0R_RULE_SET
                     ))
-                    .progress()
+                    .progress(), CallbackContext::isDeleted, CallbackContext::setDeleted
+                    )
             )
             .then(progress -> ProgressEvent.defaultSuccessHandler(null));
     }
