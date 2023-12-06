@@ -82,7 +82,6 @@ public class DeleteHandlerHandlerTest extends AbstractHandlerTestBase {
                 .when(rdsClient).describeTenantDatabases(any(DescribeTenantDatabasesRequest.class));
 
         final CallbackContext context = new CallbackContext();
-        context.setDeleted(true);
 
         test_handleRequest_base(
                 context,
@@ -110,7 +109,6 @@ public class DeleteHandlerHandlerTest extends AbstractHandlerTestBase {
                 .when(rdsClient).describeTenantDatabases(any(DescribeTenantDatabasesRequest.class));
 
         final CallbackContext context = new CallbackContext();
-        context.setDeleted(true);
 
         test_handleRequest_base(
                 context,
