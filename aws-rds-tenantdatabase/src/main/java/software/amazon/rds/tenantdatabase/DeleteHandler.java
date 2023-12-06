@@ -13,6 +13,8 @@ import software.amazon.rds.common.handler.Commons;
 import software.amazon.rds.common.logging.RequestLogger;
 import software.amazon.rds.common.util.IdentifierFactory;
 
+import java.util.function.Function;
+
 public class DeleteHandler extends BaseHandlerStd {
     private static final String SNAPSHOT_PREFIX = "Snapshot-";
     private static final int SNAPSHOT_MAX_LENGTH = 255;
@@ -62,10 +64,6 @@ public class DeleteHandler extends BaseHandlerStd {
                         updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
                         return response;
                     })
-                    .stabilize((awsRequest, awsResponse, client, model, context) -> {
-                        final TenantDatabase tenantDatabase = BaseHandlerStd.getTenantDatabase(model, proxyClient);
-                        return tenantDatabase == null;
-                    })
                     .handleError((awsRequest, exception, client, model, context) -> Commons.handleException(
                             ProgressEvent.progress(model, context),
                             exception,
@@ -73,6 +71,19 @@ public class DeleteHandler extends BaseHandlerStd {
                     ))
                     .progress()
             )
+                .then(progress -> proxy.initiate("rds::delete-tenant-database-stabilize", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+                        .translateToServiceRequest(Function.identity())
+                        .makeServiceCall((awsRequest, proxyInvocation) -> DeleteTenantDatabaseResponse.builder().build())
+                        .stabilize((awsRequest, awsResponse, client, model, context) -> {
+                            final TenantDatabase tenantDatabase = BaseHandlerStd.getTenantDatabase(model, proxyClient);
+                            return tenantDatabase == null;
+                        }).handleError((awsRequest, exception, client, model, context) -> Commons.handleException(
+                                ProgressEvent.progress(model, context),
+                                exception,
+                                DELETE_TENANT_DATABASE_ERR0R_RULE_SET
+                        ))
+                        .progress()
+                )
             .then(progress -> ProgressEvent.defaultSuccessHandler(null));
     }
 }
