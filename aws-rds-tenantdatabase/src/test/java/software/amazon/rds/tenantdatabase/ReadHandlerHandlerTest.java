@@ -76,7 +76,7 @@ public class ReadHandlerHandlerTest extends AbstractHandlerTestBase {
         test_handleRequest_base(
                 context,
                 () -> TENANT_DATABASE,
-                BASE_RESOURCE_MODEL_BUILDER::build,
+                () -> READ_RESOURCE_MODEL_BUILDER,
                 expectSuccess());
 
         DescribeTenantDatabasesRequest capturedRequest = describeTenantDatabasesCallExpectation.verify().getValue();
@@ -99,7 +99,7 @@ public class ReadHandlerHandlerTest extends AbstractHandlerTestBase {
         test_handleRequest_base(
                 context,
                 () -> TENANT_DATABASE,
-                BASE_RESOURCE_MODEL_BUILDER::build,
+                () -> READ_RESOURCE_MODEL_BUILDER,
                 expectFailed(HandlerErrorCode.NotFound));
 
         DescribeTenantDatabasesRequest capturedRequest = describeTenantDatabasesCallExpectation.verify().getValue();

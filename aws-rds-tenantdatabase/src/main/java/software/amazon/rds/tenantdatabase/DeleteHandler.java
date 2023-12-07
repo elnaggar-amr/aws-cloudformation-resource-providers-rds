@@ -3,6 +3,7 @@ package software.amazon.rds.tenantdatabase;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.rds.RdsClient;
+import software.amazon.awssdk.services.rds.model.DeleteTenantDatabaseRequest;
 import software.amazon.awssdk.services.rds.model.DeleteTenantDatabaseResponse;
 import software.amazon.awssdk.services.rds.model.TenantDatabase;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -46,7 +47,18 @@ public class DeleteHandler extends BaseHandlerStd {
             .then(progress ->
                     Commons.execOnce( progress,
                             () -> proxy.initiate("rds::delete-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
-                    .translateToServiceRequest(Translator::translateToDeleteTenantDatabaseRequest)
+                                    .translateToServiceRequest((model) -> {
+                                        DeleteTenantDatabaseRequest testR = Translator.translateToDeleteTenantDatabaseRequest(model);
+                                        if (StringUtils.isEmpty(model.getTenantDBName()) || StringUtils.isEmpty(model.getDBInstanceIdentifier())) {
+                                            TenantDatabase tdb = getTenantDatabaseWithTdbResourceId(model, proxyClient);
+                                            if (tdb != null) {
+
+                                                testR = testR.toBuilder().tenantDBName(tdb.tenantDBName())
+                                                        .dbInstanceIdentifier(tdb.dbInstanceIdentifier()).build();
+                                            }
+                                        }
+                                        return testR;
+                                    })
                     .makeServiceCall((awsRequest, proxyInvocation) -> {
                         if (finalSnapshotId != null) {
                             awsRequest = awsRequest.toBuilder().finalDBSnapshotIdentifier(finalSnapshotId).skipFinalSnapshot(false).build();
@@ -54,17 +66,14 @@ public class DeleteHandler extends BaseHandlerStd {
                             awsRequest = awsRequest.toBuilder().skipFinalSnapshot(true).build();
                         }
 
-                        updateResourceModelForServiceCall(progress.getResourceModel(), proxyClient);
-                        awsRequest = awsRequest.toBuilder().tenantDBName(progress.getResourceModel().getTenantDBName())
-                                .dbInstanceIdentifier(progress.getResourceModel().getDBInstanceIdentifier()).build();
-
                         final DeleteTenantDatabaseResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
                                 awsRequest, proxyInvocation.client()::deleteTenantDatabase);
                         updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
                         return response;
                     })
                     .stabilize((awsRequest, awsResponse, client, model, context) -> {
-                        final TenantDatabase tenantDatabase = BaseHandlerStd.getTenantDatabase(model, proxyClient);
+                        final TenantDatabase tenantDatabase =
+                                BaseHandlerStd.getTenantDatabaseWithTdbResourceId(model, proxyClient);
                         return tenantDatabase == null;
                     })
                     .handleError((awsRequest, exception, client, model, context) -> Commons.handleException(

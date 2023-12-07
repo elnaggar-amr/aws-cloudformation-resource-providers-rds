@@ -46,11 +46,13 @@ public abstract class AbstractHandlerTestBase extends AbstractTestBase<TenantDat
   protected static final ResourceModel.ResourceModelBuilder BASE_RESOURCE_MODEL_BUILDER;
   protected static final ResourceModel CREATE_RESOURCE_MODEL;
   protected static final ResourceModel MODIFY_RESOURCE_MODEL;
+  protected static final ResourceModel READ_RESOURCE_MODEL_BUILDER;
   protected static final TenantDatabase.Builder BASE_TENANT_DATABASE_BUILDER;
   protected static final LoggerProxy logger;
   protected static final String MSG_GENERIC_ERR = "Error";
   protected static final String DB_INSTANCE_IDENTIFIER = "test-multitenant-instance";
   protected static final String TENANT_DATABASE_NAME = "tdb1";
+  protected static final String TENANT_DATABASE_RESOURCE_ID = "tdb-testing";
   protected static final String NEW_TENANT_DATABASE_NAME = "tdb2";
   protected static final String MASTER_USER_NAME = "masteruser";
   protected static final String AVAILABLE_STATUS = "available";
@@ -61,6 +63,7 @@ public abstract class AbstractHandlerTestBase extends AbstractTestBase<TenantDat
             .tenantDBName(TENANT_DATABASE_NAME)
             .masterUsername(MASTER_USER_NAME)
             .dbInstanceIdentifier(DB_INSTANCE_IDENTIFIER)
+            .tenantDatabaseResourceId(TENANT_DATABASE_RESOURCE_ID)
             .tenantDatabaseCreateTime(Instant.now());
 
     TENANT_DATABASE = BASE_TENANT_DATABASE_BUILDER.status(AVAILABLE_STATUS).build();
@@ -72,10 +75,12 @@ public abstract class AbstractHandlerTestBase extends AbstractTestBase<TenantDat
             .dBInstanceIdentifier(DB_INSTANCE_IDENTIFIER)
             .tenantDBName(TENANT_DATABASE_NAME)
             .masterUsername(MASTER_USER_NAME);
+    READ_RESOURCE_MODEL_BUILDER = BASE_RESOURCE_MODEL_BUILDER.build();
     CREATE_RESOURCE_MODEL = BASE_RESOURCE_MODEL_BUILDER.masterUserPassword("password").build();
     MODIFY_RESOURCE_MODEL = BASE_RESOURCE_MODEL_BUILDER
             .masterUserPassword("newPassword")
             .newTenantDBName(NEW_TENANT_DATABASE_NAME)
+            .tenantDatabaseResourceId(TENANT_DATABASE_RESOURCE_ID)
             .build();
     logger = new LoggerProxy();
   }

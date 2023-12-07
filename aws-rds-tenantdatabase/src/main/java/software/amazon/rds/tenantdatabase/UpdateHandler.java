@@ -1,8 +1,10 @@
 package software.amazon.rds.tenantdatabase;
 
 import software.amazon.awssdk.services.rds.RdsClient;
+import software.amazon.awssdk.services.rds.model.ModifyTenantDatabaseRequest;
 import software.amazon.awssdk.services.rds.model.ModifyTenantDatabaseResponse;
 import software.amazon.awssdk.services.rds.model.TenantDatabase;
+import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -23,21 +25,27 @@ public class UpdateHandler extends BaseHandlerStd {
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress ->
                 proxy.initiate("rds::modify-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
-                    .translateToServiceRequest(Translator::translateToModifyTenantDatabaseRequest)
+                    .translateToServiceRequest((model) -> {
+                        ModifyTenantDatabaseRequest modifyRequest = Translator.translateToModifyTenantDatabaseRequest(model);
+                        if (StringUtils.isEmpty(modifyRequest.tenantDBName())) {
+                            final TenantDatabase tenantDatabase = getTenantDatabaseWithTdbResourceId(model, proxyClient);
+                            modifyRequest = tenantDatabase == null ? modifyRequest :
+                                    modifyRequest.toBuilder().tenantDBName(tenantDatabase.tenantDBName())
+                                    .dbInstanceIdentifier(tenantDatabase.dbInstanceIdentifier()).build();
+                        }
+                        return modifyRequest;
+                    })
                     .makeServiceCall((awsRequest, proxyInvocation) -> {
-
-                        updateResourceModelForServiceCall(progress.getResourceModel(), proxyClient);
-                        awsRequest = awsRequest.toBuilder().tenantDBName(progress.getResourceModel().getTenantDBName())
-                                .dbInstanceIdentifier(progress.getResourceModel().getDBInstanceIdentifier()).build();
-
                         ModifyTenantDatabaseResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
                                 awsRequest, proxyInvocation.client()::modifyTenantDatabase);
                         updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
                         return response;
                     })
                     .stabilize((awsRequest, awsResponse, client, model, context) -> {
-                        final TenantDatabase tenantDatabase = BaseHandlerStd.getRenamedTenantDatabase(model, proxyClient);
-                        return tenantDatabase != null && tenantDatabase.status().equalsIgnoreCase("available") ;
+                        final TenantDatabase tenantDatabase = BaseHandlerStd.getTenantDatabaseWithTdbResourceId(model, proxyClient);
+                        return tenantDatabase != null && tenantDatabase.status().equalsIgnoreCase("available")
+                                && (StringUtils.isEmpty(model.getNewTenantDBName()) ||
+                                model.getNewTenantDBName().equalsIgnoreCase(tenantDatabase.tenantDBName()));
                     })
                     .handleError((awsRequest, exception, client, model, context) -> Commons.handleException(
                             ProgressEvent.progress(model, context),
@@ -45,6 +53,6 @@ public class UpdateHandler extends BaseHandlerStd {
                             MODIFY_TENANT_DATABASE_ERROR_RULE_SET
                     ))
                     .progress())
-            .then(progress -> new ReadHandler().handleRequestForRename(proxy, request, callbackContext, proxyClient, logger));
+            .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 }

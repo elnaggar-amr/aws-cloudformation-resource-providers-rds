@@ -92,8 +92,9 @@ public class UpdateHandlerHandlerTest extends AbstractHandlerTestBase {
                         expectSuccess()
                 );
 
+        System.out.println(describeTenantDatabasesCallExpectation);
         describeTenantDatabasesCallExpectation.verify().getAllValues()
-                .forEach(request -> Assertions.assertThat(request.tenantDBName()).isEqualTo("tdb2"));
+                .forEach(request -> Assertions.assertThat(request.filters().get(0).values().get(0)).isEqualTo(TENANT_DATABASE_RESOURCE_ID));
 
         verify(proxyClient.client(), times(1)).modifyTenantDatabase(any(ModifyTenantDatabaseRequest.class));
 

@@ -21,16 +21,16 @@ public class ReadHandler extends BaseHandlerStd {
 
         this.logger = logger;
         return proxy.initiate("rds::describe-tenant-database", proxyClient, request.getDesiredResourceState(), callbackContext)
-                .translateToServiceRequest(Translator::translateToDescribeTenantDatabasesRequest)
-                .makeServiceCall((describeRequest, proxyInvocation) -> {
-                    updateResourceModelForServiceCall(request.getDesiredResourceState(), proxyClient);
-                    describeRequest = describeRequest.toBuilder().tenantDBName(request.getDesiredResourceState().getTenantDBName())
-                            .dbInstanceIdentifier(request.getDesiredResourceState().getDBInstanceIdentifier()).build();
-                    return proxyInvocation.injectCredentialsAndInvokeV2(
-                            describeRequest,
-                            proxyInvocation.client()::describeTenantDatabases
-                    );
+                .translateToServiceRequest((model) -> {
+                    if (!StringUtils.isEmpty(model.getTenantDatabaseResourceId())) {
+                        return Translator.translateToDescribeTenantDatabasesRequestWithTenantDBResourceId(model);
+                    }
+                    return Translator.translateToDescribeTenantDatabasesRequest(model);
                 })
+                .makeServiceCall((describeRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(
+                        describeRequest,
+                        proxyInvocation.client()::describeTenantDatabases
+                ))
                 .handleError((describeRequest, exception, client, model, context) -> Commons.handleException(
                         ProgressEvent.progress(model, context),
                         exception,
