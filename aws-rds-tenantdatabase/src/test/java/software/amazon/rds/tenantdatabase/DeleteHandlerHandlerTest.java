@@ -124,6 +124,26 @@ public class DeleteHandlerHandlerTest extends AbstractHandlerTestBase {
         verify(proxyClient.client(), times(1)).deleteTenantDatabase(any(DeleteTenantDatabaseRequest.class));
     }
 
+    @Test
+    public void handleRequest_TenantNotFoundWithPrimaryIdentifier() {
+        doReturn(DescribeTenantDatabasesResponse.builder().build())
+                .when(rdsClient).describeTenantDatabases(any(DescribeTenantDatabasesRequest.class));
+
+        final CallbackContext context = new CallbackContext();
+
+        test_handleRequest_base(
+                context,
+                ResourceHandlerRequest.<ResourceModel>builder().snapshotRequested(false),
+                () -> TENANT_DATABASE,
+                null,
+                ResourceModel.builder().tenantDatabaseResourceId(TENANT_DATABASE_RESOURCE_ID)::build,
+                expectFailed(HandlerErrorCode.NotFound)
+        );
+
+
+        verify(proxyClient.client(), times(1)).describeTenantDatabases(any(DescribeTenantDatabasesRequest.class));
+    }
+
     @ParameterizedTest
     @ArgumentsSource(DeleteTenantDatabasesExceptionArgumentsProvider.class)
     public void handleRequest_DeleteTenantDatabase_HandleException(

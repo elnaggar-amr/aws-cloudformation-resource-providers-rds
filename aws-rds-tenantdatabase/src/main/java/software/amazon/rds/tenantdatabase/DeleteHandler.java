@@ -3,9 +3,9 @@ package software.amazon.rds.tenantdatabase;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.rds.RdsClient;
-import software.amazon.awssdk.services.rds.model.DeleteTenantDatabaseRequest;
 import software.amazon.awssdk.services.rds.model.DeleteTenantDatabaseResponse;
 import software.amazon.awssdk.services.rds.model.TenantDatabase;
+import software.amazon.awssdk.services.rds.model.TenantDatabaseNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -47,19 +47,18 @@ public class DeleteHandler extends BaseHandlerStd {
             .then(progress ->
                     Commons.execOnce( progress,
                             () -> proxy.initiate("rds::delete-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
-                                    .translateToServiceRequest((model) -> {
-                                        DeleteTenantDatabaseRequest testR = Translator.translateToDeleteTenantDatabaseRequest(model);
-                                        if (StringUtils.isEmpty(model.getTenantDBName()) || StringUtils.isEmpty(model.getDBInstanceIdentifier())) {
-                                            TenantDatabase tdb = getTenantDatabaseWithTdbResourceId(model, proxyClient);
-                                            if (tdb != null) {
-
-                                                testR = testR.toBuilder().tenantDBName(tdb.tenantDBName())
-                                                        .dbInstanceIdentifier(tdb.dbInstanceIdentifier()).build();
-                                            }
-                                        }
-                                        return testR;
-                                    })
+                                    .translateToServiceRequest(Translator::translateToDeleteTenantDatabaseRequest)
                     .makeServiceCall((awsRequest, proxyInvocation) -> {
+                        if (StringUtils.isEmpty(awsRequest.tenantDBName())
+                                || StringUtils.isEmpty(awsRequest.dbInstanceIdentifier())) {
+                            TenantDatabase tdb = getTenantDatabaseWithTdbResourceId(progress.getResourceModel(), proxyClient);
+                            if (tdb != null) {
+                                awsRequest = awsRequest.toBuilder().tenantDBName(tdb.tenantDBName())
+                                        .dbInstanceIdentifier(tdb.dbInstanceIdentifier()).build();
+                            } else {
+                                throw TenantDatabaseNotFoundException.builder().message("Tenant Database not found").build();
+                            }
+                        }
                         if (finalSnapshotId != null) {
                             awsRequest = awsRequest.toBuilder().finalDBSnapshotIdentifier(finalSnapshotId).skipFinalSnapshot(false).build();
                         } else {

@@ -38,11 +38,9 @@ public class ReadHandler extends BaseHandlerStd {
                 ))
                 .done((describeRequest, describeResponse, proxyInvocation, resourceModel, context) -> {
                     final ResourceModel response = Translator.translateDescribeTenantDatabasesResponseToResourceModel(describeResponse);
-
                     if (response == null) {
                         return ProgressEvent.failed(resourceModel, context, HandlerErrorCode.NotFound, "Tenant database was not found");
                     }
-
                     return ProgressEvent.success(Translator.translateDescribeTenantDatabasesResponseToResourceModel(describeResponse), context);
                 });
     }

@@ -1,9 +1,9 @@
 package software.amazon.rds.tenantdatabase;
 
 import software.amazon.awssdk.services.rds.RdsClient;
-import software.amazon.awssdk.services.rds.model.ModifyTenantDatabaseRequest;
 import software.amazon.awssdk.services.rds.model.ModifyTenantDatabaseResponse;
 import software.amazon.awssdk.services.rds.model.TenantDatabase;
+import software.amazon.awssdk.services.rds.model.TenantDatabaseNotFoundException;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -25,17 +25,18 @@ public class UpdateHandler extends BaseHandlerStd {
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress ->
                 proxy.initiate("rds::modify-tenant-database", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
-                    .translateToServiceRequest((model) -> {
-                        ModifyTenantDatabaseRequest modifyRequest = Translator.translateToModifyTenantDatabaseRequest(model);
-                        if (StringUtils.isEmpty(modifyRequest.tenantDBName())) {
-                            final TenantDatabase tenantDatabase = getTenantDatabaseWithTdbResourceId(model, proxyClient);
-                            modifyRequest = tenantDatabase == null ? modifyRequest :
-                                    modifyRequest.toBuilder().tenantDBName(tenantDatabase.tenantDBName())
-                                    .dbInstanceIdentifier(tenantDatabase.dbInstanceIdentifier()).build();
-                        }
-                        return modifyRequest;
-                    })
+                    .translateToServiceRequest(Translator::translateToModifyTenantDatabaseRequest)
                     .makeServiceCall((awsRequest, proxyInvocation) -> {
+                        if (StringUtils.isEmpty(awsRequest.tenantDBName())
+                                || org.apache.commons.lang3.StringUtils.isEmpty(awsRequest.dbInstanceIdentifier())) {
+                            TenantDatabase tdb = getTenantDatabaseWithTdbResourceId(progress.getResourceModel(), proxyClient);
+                            if (tdb != null) {
+                                awsRequest = awsRequest.toBuilder().tenantDBName(tdb.tenantDBName())
+                                        .dbInstanceIdentifier(tdb.dbInstanceIdentifier()).build();
+                            } else {
+                                throw TenantDatabaseNotFoundException.builder().message("Tenant Database not found").build();
+                            }
+                        }
                         ModifyTenantDatabaseResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
                                 awsRequest, proxyInvocation.client()::modifyTenantDatabase);
                         updateResourceModel(response.tenantDatabase(), progress.getResourceModel());
