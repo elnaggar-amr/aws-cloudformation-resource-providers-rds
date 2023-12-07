@@ -1,8 +1,0 @@
-{
-    "UpdateInputs": {
-        "DBInstanceIdentifier": "{{ awsrdstenantdatabasecto1 }}",
-        "TenantDBName": "tdb1",
-        "NewTenantDBName": "tdb2",
-        "MasterUserPassword": "newPassword"
-    }
-}
